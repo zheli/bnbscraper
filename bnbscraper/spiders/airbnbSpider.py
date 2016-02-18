@@ -11,7 +11,7 @@ class AirbnbSpider(scrapy.Spider):
     start_urls = startUrls
 
     def parse(self, response):
-        for href in response.xpath('//div[contains(@data-url, "rooms")]/@data-url').extract():
+        for href in response.xpath('//div[@class="listing"]/@data-url').extract():
             url = response.urljoin(href)
             yield scrapy.Request(url, callback=self.parse_dir_contents)
 
