@@ -11,3 +11,6 @@ bnbscraper/settings.pyc
 bnbscraper/spiders/__init__.pyc
 bnbscraper/spiders/airbnbSpider.pyc
 **/*.pyc
+*.pyx
+*.pyc
+*.json
