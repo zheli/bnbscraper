@@ -21,7 +21,6 @@ class AirbnbSpider(scrapy.Spider):
 
     def parse(self, response):
         # this function is called the first time to get the first page and see how many links there are
-        print(response)
         last_page_number = int(response
                                .xpath('//ul[@class="list-unstyled"]/li[last()-1]/a/@href')
                                .extract()[0]
@@ -30,9 +29,8 @@ class AirbnbSpider(scrapy.Spider):
         print(last_page_number)
         page_urls = [self.start_urls[0] + "?&page=" + str(pageNumber)
                      for pageNumber
-                     in range(2, 3)
+                     in range(2, last_page_number+1)
                      ]
-        # TODO: change the above line back to range(2, last_page_number)
         page_urls = self.start_urls + page_urls
 
         # the function loops over all paginated result pages
