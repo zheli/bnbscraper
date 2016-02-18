@@ -2,20 +2,34 @@ import scrapy
 
 
 class BnbItem(scrapy.Item):
-    title = scrapy.Field()  # '/html/head/meta[@property="og:title"]/@content'
-    location = scrapy.Field() # '/html/head/meta[@property="airbedandbreakfast:locality"]/@content'
-    region = scrapy.Field() # '/html/head/meta[@property="airbedandbreakfast:region"]/@content'
-    country = scrapy.Field() # '/html/head/meta[@property="airbedandbreakfast:country"]/@content'
-    lat = scrapy.Field()  # '/html/head/meta[@property="airbedandbreakfast:location:latitude"]/@content'
-    long = scrapy.Field()  # '/html/head/meta[@property="airbedandbreakfast:location:longitude"]/@content'
-    url = scrapy.Field()  # xpath '/html/head/meta[@property="og:url"]/@content'
-    rating = scrapy.Field()  # '/html/head/meta[@property="airbedandbreakfast:rating"]/@content'
-    accomodates = scrapy.Field()  # '//strong[contains(@data-reactid,"Accommodates")]/text()'
-    bathrooms = scrapy.Field()  # '//strong[contains(@data-reactid,"Bathrooms")]/text()'
-    bedrooms = scrapy.Field()  # '//strong[contains(@data-reactid,"Bedrooms")]/text()'
-    beds = scrapy.Field()  # '//strong[contains(@data-reactid,"Beds")]/text()'
-    propertyType = scrapy.Field()  # '//strong[contains(@data-reactid,"Property type")]/text()'
-    roomType = scrapy.Field()   # '//strong[contains(@data-reactid,"Room type")]/text()'
-    extraPeople = scrapy.Field()  # '//strong[contains(@data-reactid,"Extra people")]/text()'
-    cleaningFee = scrapy.Field()  # '//strong[contains(@data-reactid,"Cleaning")]/text()'
-    price = scrapy.Field()  # '//div/span[contains(@class, "price-amount")]/text()'
+        rev_count = scrapy.Field()
+        amenities = scrapy.Field()
+        host_id = scrapy.Field()
+        hosting_id = scrapy.Field()
+        room_type = scrapy.Field()
+        price = scrapy.Field()
+        bed_type = scrapy.Field()
+        person_capacity = scrapy.Field()
+        cancel_policy = scrapy.Field()
+        rating_communication = scrapy.Field()
+        rating_cleanliness = scrapy.Field()
+        rating_checkin = scrapy.Field()
+        satisfaction_guest = scrapy.Field()
+        instant_book = scrapy.Field()
+        accuracy_rating = scrapy.Field()
+        response_time = scrapy.Field()
+        reponse_rate = scrapy.Field()
+        title = scrapy.Field()
+        location = scrapy.Field()
+        region = scrapy.Field()
+        country = scrapy.Field()
+        lat = scrapy.Field()
+        lng = scrapy.Field()
+        url = scrapy.Field()
+        bathrooms = scrapy.Field()
+        bedrooms = scrapy.Field()
+        beds = scrapy.Field()
+        propertyType = scrapy.Field()
+        extraPeople = scrapy.Field()
+        cleaningFee = scrapy.Field()
+
