@@ -18,7 +18,7 @@ class BnbItem(scrapy.Item):
         instant_book = scrapy.Field()
         accuracy_rating = scrapy.Field()
         response_time = scrapy.Field()
-        reponse_rate = scrapy.Field()
+        response_rate = scrapy.Field()
         title = scrapy.Field()
         location = scrapy.Field()
         region = scrapy.Field()
@@ -32,4 +32,3 @@ class BnbItem(scrapy.Item):
         propertyType = scrapy.Field()
         extraPeople = scrapy.Field()
         cleaningFee = scrapy.Field()
-

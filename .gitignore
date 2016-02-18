@@ -5,3 +5,9 @@ idea/
 .idea/
 .scrapy/
 airbnb160216.json
+bnbscraper/__init__.pyc
+bnbscraper/bnbItem.pyc
+bnbscraper/settings.pyc
+bnbscraper/spiders/__init__.pyc
+bnbscraper/spiders/airbnbSpider.pyc
+**/*.pyc
