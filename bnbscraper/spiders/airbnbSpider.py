@@ -2,17 +2,18 @@ import scrapy
 from bnbscraper.bnbItem import BnbItem
 import json
 
-# startUrls = ["https://www.airbnb.com/s/Lucca--Italy?&page="+str(pageNumber) for pageNumber in range(1, 17)]
 AIRBNB_URL = "https://www.airbnb.com/s/"
-LOCATION = "Reggio-Emilia--Italy"
-BASE_URL = AIRBNB_URL + LOCATION
 
 
 
 class AirbnbSpider(scrapy.Spider):
+
+    def __init__(self, query=None, *args, **kwargs):
+        super(AirbnbSpider, self).__init__(*args, **kwargs)
+        self.start_urls = [AIRBNB_URL + query]
+
     name = "airbnb"
     allowed_domains = ["airbnb.com"]
-    start_urls = [BASE_URL]
 
     def parse(self, response):
         # this function is called the first time to get the first page and see how many links there are
@@ -23,12 +24,12 @@ class AirbnbSpider(scrapy.Spider):
                                .split('page=')[1]
                                )
         print(last_page_number)
-        page_urls = [BASE_URL + "?&page=" + str(pageNumber)
+        page_urls = [self.start_urls[0] + "?&page=" + str(pageNumber)
                      for pageNumber
                      in range(2, 3)
                      ]
         # TODO: change the above line back to range(2, last_page_number)
-        page_urls = [BASE_URL] + page_urls
+        page_urls = self.start_urls + page_urls
 
         # the function loops over all paginated result pages
         for page_url in page_urls:
