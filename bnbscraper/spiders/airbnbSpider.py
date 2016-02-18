@@ -7,10 +7,14 @@ AIRBNB_URL = "https://www.airbnb.com/s/"
 
 
 class AirbnbSpider(scrapy.Spider):
-
+    """
+    pass command line arguments as follows
+    e.g. scrapy crawl airbnb -a query=Reggio-Emilia--Italy -o tests.json
+    """
     def __init__(self, query=None, *args, **kwargs):
         super(AirbnbSpider, self).__init__(*args, **kwargs)
         self.start_urls = [AIRBNB_URL + query]
+
 
     name = "airbnb"
     allowed_domains = ["airbnb.com"]
