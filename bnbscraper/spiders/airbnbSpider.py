@@ -20,30 +20,40 @@ class AirbnbSpider(scrapy.Spider):
     allowed_domains = ["airbnb.com"]
 
     def parse(self, response):
+        # TODO: implement the following construct
+        # - navigate to the start_urls and obtain the neighboorhoods
+        #   using response.xpath('//input[@name="neighborhood"]/@value').extract()
+        # - concatenate as necessary and go to new search page and pass to new parse function
+        # - obtain last_page number from this query page and implement as below
+
+
+
+
         # this function is called the first time to get the first page and see how many links there are
         last_page_number = int(response
                                .xpath('//ul[@class="list-unstyled"]/li[last()-1]/a/@href')
                                .extract()[0]
                                .split('page=')[1]
                                )
-        print(last_page_number)
         page_urls = [self.start_urls[0] + "?&page=" + str(pageNumber)
                      for pageNumber
-                     in range(2, last_page_number+1)
+                     in range(2, 3)
                      ]
         page_urls = self.start_urls + page_urls
 
         # the function loops over all paginated result pages
         for page_url in page_urls:
-            yield scrapy.Request(page_url, callback=self.parse_query_page)
+            yield scrapy.Request(page_url, callback=lambda r, page=page_url: self.parse_query_page(r, page))
             # send a request every time and set as callback the parseQueryPage
 
-    def parse_query_page(self, response):
+    def parse_query_page(self, response, fromPage):
         for href in response.xpath('//div[@class="listing"]/@data-url').extract():
             url = response.urljoin(href)
-            yield scrapy.Request(url, callback=self.parse_dir_contents)
+            # yield scrapy.Request(url, callback=self.parse_dir_contents)
 
-    def parse_dir_contents(self, response):
+            yield scrapy.Request(url, callback=lambda r, page=fromPage:self.parse_dir_contents(r, page))
+
+    def parse_dir_contents(self, response, fromPage):
         """
         This method extracts the actual data from the airbnb listing
         :param response: scrapy response object
@@ -121,5 +131,7 @@ class AirbnbSpider(scrapy.Spider):
         cleaningFee = response.xpath('//strong[contains(@data-reactid,"Cleaning")]/text()').extract()
         if len(cleaningFee):
             item['cleaningFee'] = cleaningFee[0]
+
+        item['pageNumber'] = fromPage
 
         yield item
