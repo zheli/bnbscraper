@@ -24,9 +24,9 @@ USER_AGENT = 'Googlebot/2.1 (+http://www.googlebot.com/bot.html)'
 # Configure a delay for requests for the same website (default: 0)
 # See http://scrapy.readthedocs.org/en/latest/topics/settings.html#download-delay
 # See also autothrottle settings and docs
-DOWNLOAD_DELAY=3
+DOWNLOAD_DELAY=8
 # The download delay setting will honor only one of:
-CONCURRENT_REQUESTS_PER_DOMAIN=20
+CONCURRENT_REQUESTS_PER_DOMAIN=8
 #CONCURRENT_REQUESTS_PER_IP=16
 
 # Disable cookies (enabled by default)
@@ -70,7 +70,7 @@ CONCURRENT_REQUESTS_PER_DOMAIN=20
 # NOTE: AutoThrottle will honour the standard settings for concurrency and delay
 AUTOTHROTTLE_ENABLED=True
 # The initial download delay
-AUTOTHROTTLE_START_DELAY=5
+AUTOTHROTTLE_START_DELAY=8
 # The maximum download delay to be set in case of high latencies
 AUTOTHROTTLE_MAX_DELAY=60
 # Enable showing throttling stats for every response received:
@@ -83,3 +83,4 @@ HTTPCACHE_EXPIRATION_SECS=20
 HTTPCACHE_DIR='httpcache'
 #HTTPCACHE_IGNORE_HTTP_CODES=[]
 HTTPCACHE_STORAGE='scrapy.extensions.httpcache.FilesystemCacheStorage'
+
