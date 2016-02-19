@@ -33,3 +33,4 @@ class BnbItem(scrapy.Item):
         extraPeople = scrapy.Field()
         cleaningFee = scrapy.Field()
         pageNumber = scrapy.Field()
+        neighborhood = scrapy.Field()

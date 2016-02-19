@@ -2,9 +2,13 @@ import scrapy
 from bnbscraper.bnbItem import BnbItem
 import json
 
+
+# TODO: implement the class to avoid calls to pages which are already crawled
+# http://stackoverflow.com/questions/12553117/how-to-filter-duplicate-requests-based-on-url-in-scrapy
+
 AIRBNB_URL = "https://www.airbnb.com/s/"
 
-
+LISTING_ID_SEEN = set()
 
 class AirbnbSpider(scrapy.Spider):
     """
@@ -20,40 +24,52 @@ class AirbnbSpider(scrapy.Spider):
     allowed_domains = ["airbnb.com"]
 
     def parse(self, response):
-        # TODO: implement the following construct
-        # - navigate to the start_urls and obtain the neighboorhoods
-        #   using response.xpath('//input[@name="neighborhood"]/@value').extract()
-        # - concatenate as necessary and go to new search page and pass to new parse function
-        # - obtain last_page number from this query page and implement as below
+        all_neighborhoods =  response.xpath('//input[@name="neighborhood"]/@value').extract()
+        # test if there are any neighborhoods
+        if not all_neighborhoods:
+            # if not pass the first page to the parse result page
+            yield scrapy.Request(self.start_urls[0], callback=lambda r, neigh=None: self.parse_start_page(r, neigh))
+        else:
+            for neighborhood in all_neighborhoods:
+                neighborhood = neighborhood.replace(' ','+')
+                request_url = self.start_urls[0]+'?'+'neighborhoods='+neighborhood
+                yield scrapy.Request(request_url, callback=lambda r, neigh=neighborhood: self.parse_start_page(r, neigh))
 
 
-
-
-        # this function is called the first time to get the first page and see how many links there are
+    def parse_start_page(self, response, le_neighborhood):
+        # this function is called to parse the individual links on the result page after any filter in the previous steps
         last_page_number = int(response
                                .xpath('//ul[@class="list-unstyled"]/li[last()-1]/a/@href')
                                .extract()[0]
                                .split('page=')[1]
                                )
-        page_urls = [self.start_urls[0] + "?&page=" + str(pageNumber)
+        # use the request.url to add the right page not through simple cat
+        if '?' in response.url:
+            page_separator = '&'
+        else:
+            page_separator= '?'
+        page_urls = [response.url + page_separator + "page=" + str(pageNumber)
                      for pageNumber
-                     in range(2, 3)
+                     in range(1, last_page_number+1)
                      ]
-        page_urls = self.start_urls + page_urls
-
+        print '-----------------------------'
+        print page_urls
+        print '-----------------------------'
         # the function loops over all paginated result pages
         for page_url in page_urls:
-            yield scrapy.Request(page_url, callback=lambda r, page=page_url: self.parse_query_page(r, page))
+            yield scrapy.Request(page_url, callback=lambda r, page=page_url, neigh=le_neighborhood: self.parse_listing_results_page(r, page, neigh))
             # send a request every time and set as callback the parseQueryPage
 
-    def parse_query_page(self, response, fromPage):
+
+
+    def parse_listing_results_page(self, response, coming_from_page, le_neighborhood):
         for href in response.xpath('//div[@class="listing"]/@data-url').extract():
             url = response.urljoin(href)
             # yield scrapy.Request(url, callback=self.parse_dir_contents)
 
-            yield scrapy.Request(url, callback=lambda r, page=fromPage:self.parse_dir_contents(r, page))
+            yield scrapy.Request(url, callback=lambda r, page=coming_from_page, neigh=le_neighborhood:self.parse_dir_contents(r, page, neigh))
 
-    def parse_dir_contents(self, response, fromPage):
+    def parse_dir_contents(self, response, coming_from_page, le_neighborhood):
         """
         This method extracts the actual data from the airbnb listing
         :param response: scrapy response object
@@ -132,6 +148,7 @@ class AirbnbSpider(scrapy.Spider):
         if len(cleaningFee):
             item['cleaningFee'] = cleaningFee[0]
 
-        item['pageNumber'] = fromPage
+        item['pageNumber'] = coming_from_page
+        item['neighborhood'] = le_neighborhood
 
         yield item
