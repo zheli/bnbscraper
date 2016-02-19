@@ -13,7 +13,7 @@ BOT_NAME = 'bnbscraper'
 
 SPIDER_MODULES = ['bnbscraper.spiders']
 NEWSPIDER_MODULE = 'bnbscraper.spiders'
-
+DUPEFILTER_CLASS = 'bnbscraper.dedupe.CustomFilter'
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 USER_AGENT = 'Googlebot/2.1 (+http://www.googlebot.com/bot.html)'
@@ -27,7 +27,6 @@ USER_AGENT = 'Googlebot/2.1 (+http://www.googlebot.com/bot.html)'
 DOWNLOAD_DELAY=8
 # The download delay setting will honor only one of:
 CONCURRENT_REQUESTS_PER_DOMAIN=5
-CONCURRENT_REQUESTS_PER_DOMAIN=8
 #CONCURRENT_REQUESTS_PER_IP=16
 
 # Disable cookies (enabled by default)
