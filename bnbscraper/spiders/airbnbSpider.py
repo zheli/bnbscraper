@@ -1,6 +1,7 @@
 import scrapy
 from bnbscraper.bnbItem import BnbItem
 import json
+import urllib
 
 
 # TODO: implement the class to avoid calls to pages which are already crawled
@@ -13,30 +14,37 @@ LISTING_ID_SEEN = set()
 class AirbnbSpider(scrapy.Spider):
     """
     pass command line arguments as follows
-    e.g. scrapy crawl airbnb -a query=Reggio-Emilia--Italy -o tests.json
+    e.g. scrapy crawl airbnb -a query=Reggio-Emilia--Italy filters=neighborhood,propertytype-o tests.json
     """
-    def __init__(self, query=None, *args, **kwargs):
+    def __init__(self, query='', filters='', *args, **kwargs):
         super(AirbnbSpider, self).__init__(*args, **kwargs)
         self.start_urls = [AIRBNB_URL + query]
-
+        self.bnb_filters = [filter.strip() for filter in list(filters.split(','))]
 
     name = "airbnb"
     allowed_domains = ["airbnb.com"]
 
     def parse(self, response):
-        all_neighborhoods =  response.xpath('//input[@name="neighborhood"]/@value').extract()
+        filter_dict =  self.extract_filter_property(response)
         # test if there are any neighborhoods
-        if not all_neighborhoods:
+        if not filter_dict:
             # if not pass the first page to the parse result page
-            yield scrapy.Request(self.start_urls[0], callback=lambda r, neigh=None: self.parse_start_page(r, neigh))
+            yield scrapy.Request(self.start_urls[0], callback=self.parse_start_page)
         else:
-            for neighborhood in all_neighborhoods:
+            for filter, filter_value_list in filter_dict.iterkeys():
+                for value in filter_value_list:
+
+
+
+
+
+
                 neighborhood = neighborhood.replace(' ','+')
                 request_url = self.start_urls[0]+'?'+'neighborhoods='+neighborhood
-                yield scrapy.Request(request_url, callback=lambda r, neigh=neighborhood: self.parse_start_page(r, neigh))
+                yield scrapy.Request(request_url, callback=self.parse_start_page)
 
 
-    def parse_start_page(self, response, le_neighborhood):
+    def parse_start_page(self, response):
         # this function is called to parse the individual links on the result page after any filter in the previous steps
         last_page_number = int(response
                                .xpath('//ul[@class="list-unstyled"]/li[last()-1]/a/@href')
@@ -52,24 +60,24 @@ class AirbnbSpider(scrapy.Spider):
                      for pageNumber
                      in range(1, last_page_number+1)
                      ]
-        print '-----------------------------'
+        print '----------- URLs constructed ------------------'
         print page_urls
-        print '-----------------------------'
+        print '-----------------------------------------------'
         # the function loops over all paginated result pages
         for page_url in page_urls:
-            yield scrapy.Request(page_url, callback=lambda r, page=page_url, neigh=le_neighborhood: self.parse_listing_results_page(r, page, neigh))
+            yield scrapy.Request(page_url, callback=self.parse_listing_results_page)
             # send a request every time and set as callback the parseQueryPage
 
 
-
-    def parse_listing_results_page(self, response, coming_from_page, le_neighborhood):
+    def parse_listing_results_page(self, response):
         for href in response.xpath('//div[@class="listing"]/@data-url').extract():
             url = response.urljoin(href)
             # yield scrapy.Request(url, callback=self.parse_dir_contents)
 
             yield scrapy.Request(url, callback=lambda r, page=coming_from_page, neigh=le_neighborhood:self.parse_dir_contents(r, page, neigh))
 
-    def parse_dir_contents(self, response, coming_from_page, le_neighborhood):
+
+    def parse_dir_contents(self, response):
         """
         This method extracts the actual data from the airbnb listing
         :param response: scrapy response object
@@ -148,7 +156,24 @@ class AirbnbSpider(scrapy.Spider):
         if len(cleaningFee):
             item['cleaningFee'] = cleaningFee[0]
 
-        item['pageNumber'] = coming_from_page
-        item['neighborhood'] = le_neighborhood
+        item['neighborhood'] = response.request.url
 
         yield item
+
+
+    def extract_filter_property(self, response):
+        """
+        This function takes the list of valid! filters and returns the available values found on the initial page
+        :param response:
+        :return: a dict with the filters as keys and the possible values as lists
+        """
+        filterDict = dict()
+
+        if self.filters:
+            return filterDict
+        else:
+            for filter in self.bnb_filters:
+                xpath_query_string = '//input[@name="%s"]/@value' % filter
+                filterDict[filter] = response.xpath(xpath_query_string).extract()
+            return filterDict
+
