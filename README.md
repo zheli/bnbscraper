@@ -19,4 +19,10 @@ the filters are supplied as `-a filter=<FILTER1,FILTER2>` they must be comma sep
   * `property_type_id`
   * `room-type`
   * `source`
-  * `superhos`
+  * `superhost`
+
+Advanced usage:
+```bash
+>>  scrapy crawl airbnb -a query=Rome--Italy -a filters=neighborhood,property_type_id -o output.json  2>&1 | tee ~/<log>.log
+```
+

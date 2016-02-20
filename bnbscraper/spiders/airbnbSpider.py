@@ -21,7 +21,7 @@ class AirbnbSpider(scrapy.Spider):
         super(AirbnbSpider, self).__init__(*args, **kwargs)
         self.start_urls = [AIRBNB_URL + query]
         self.bnb_filters = [filter.strip() for filter in list(filters.split(','))]
-        print self.bnb_filters
+
     name = "airbnb"
     allowed_domains = ["airbnb.com"]
 
@@ -32,12 +32,10 @@ class AirbnbSpider(scrapy.Spider):
             # if not pass the first page to the parse result page
             yield scrapy.Request(self.start_urls[0], callback=self.parse_start_page)
         else:
-            print(filter_dict)
             all_combinations = self.filter_dict_to_tuple(filter_dict)
             for filter_combination in self.filter_combinations_generator(all_combinations):
                 query_string = urllib.urlencode(filter_combination)
                 request_url = self.start_urls[0]+'?'+query_string
-                print request_url
                 yield scrapy.Request(request_url, callback=self.parse_start_page)
 
 
@@ -62,9 +60,6 @@ class AirbnbSpider(scrapy.Spider):
                      for pageNumber
                      in range(1, last_page_number+1)
                      ]
-        print '----------- URLs constructed ------------------'
-        print page_urls
-        print '-----------------------------------------------'
         # the function loops over all paginated result pages
         for page_url in page_urls:
             yield scrapy.Request(page_url, callback=self.parse_listing_results_page)

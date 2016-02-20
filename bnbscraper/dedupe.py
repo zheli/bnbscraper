@@ -16,8 +16,7 @@ class CustomFilter(RFPDupeFilter):
     def request_seen(self, request):
         fp = self.__getid(request.url)
         if fp in self.fingerprints and fp:
-            print '------LUCA INFO--------'
-            print fp
+            print 'DEDUPE: '+fp
             return True
         self.fingerprints.add(fp)
         if self.file:
