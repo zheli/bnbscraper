@@ -2,6 +2,7 @@ import scrapy
 from bnbscraper.bnbItem import BnbItem
 import json
 import urllib
+import itertools
 
 
 # TODO: implement the class to avoid calls to pages which are already crawled
@@ -20,7 +21,7 @@ class AirbnbSpider(scrapy.Spider):
         super(AirbnbSpider, self).__init__(*args, **kwargs)
         self.start_urls = [AIRBNB_URL + query]
         self.bnb_filters = [filter.strip() for filter in list(filters.split(','))]
-
+        print self.bnb_filters
     name = "airbnb"
     allowed_domains = ["airbnb.com"]
 
@@ -31,26 +32,27 @@ class AirbnbSpider(scrapy.Spider):
             # if not pass the first page to the parse result page
             yield scrapy.Request(self.start_urls[0], callback=self.parse_start_page)
         else:
-            for filter, filter_value_list in filter_dict.iterkeys():
-                for value in filter_value_list:
-
-
-
-
-
-
-                neighborhood = neighborhood.replace(' ','+')
-                request_url = self.start_urls[0]+'?'+'neighborhoods='+neighborhood
+            print(filter_dict)
+            all_combinations = self.filter_dict_to_tuple(filter_dict)
+            for filter_combination in self.filter_combinations_generator(all_combinations):
+                query_string = urllib.urlencode(filter_combination)
+                request_url = self.start_urls[0]+'?'+query_string
+                print request_url
                 yield scrapy.Request(request_url, callback=self.parse_start_page)
 
 
     def parse_start_page(self, response):
         # this function is called to parse the individual links on the result page after any filter in the previous steps
-        last_page_number = int(response
+
+        try:
+            last_page_number = int(response
                                .xpath('//ul[@class="list-unstyled"]/li[last()-1]/a/@href')
                                .extract()[0]
                                .split('page=')[1]
                                )
+        except:
+            last_page_number = 1
+
         # use the request.url to add the right page not through simple cat
         if '?' in response.url:
             page_separator = '&'
@@ -72,9 +74,7 @@ class AirbnbSpider(scrapy.Spider):
     def parse_listing_results_page(self, response):
         for href in response.xpath('//div[@class="listing"]/@data-url').extract():
             url = response.urljoin(href)
-            # yield scrapy.Request(url, callback=self.parse_dir_contents)
-
-            yield scrapy.Request(url, callback=lambda r, page=coming_from_page, neigh=le_neighborhood:self.parse_dir_contents(r, page, neigh))
+            yield scrapy.Request(url, callback=self.parse_dir_contents)
 
 
     def parse_dir_contents(self, response):
@@ -169,11 +169,27 @@ class AirbnbSpider(scrapy.Spider):
         """
         filterDict = dict()
 
-        if self.filters:
+        if not self.bnb_filters:
             return filterDict
         else:
             for filter in self.bnb_filters:
                 xpath_query_string = '//input[@name="%s"]/@value' % filter
                 filterDict[filter] = response.xpath(xpath_query_string).extract()
             return filterDict
+
+
+    def filter_dict_to_tuple(self, filter_dict):
+        """
+        returns a list of lists of all possible combinations of key and value to be used in the url creation
+        use urllib.urlencode([first_tuple, second_tuple)]
+        :param filter_dict:
+        :return:
+        """
+        return [[(key, filter_dict[key][i]) for i in range(len(filter_dict[key]))] for key in filter_dict.keys()]
+
+
+    def filter_combinations_generator(self, combinations):
+        for element in itertools.product(*combinations):
+            yield element
+
 
