@@ -5,12 +5,8 @@ import urllib
 import itertools
 
 
-# TODO: implement the class to avoid calls to pages which are already crawled
-# http://stackoverflow.com/questions/12553117/how-to-filter-duplicate-requests-based-on-url-in-scrapy
-
 AIRBNB_URL = "https://www.airbnb.com/s/"
 
-LISTING_ID_SEEN = set()
 
 class AirbnbSpider(scrapy.Spider):
     """
@@ -34,7 +30,8 @@ class AirbnbSpider(scrapy.Spider):
         else:
             all_combinations = self.filter_dict_to_tuple(filter_dict)
             for filter_combination in self.filter_combinations_generator(all_combinations):
-                query_string = urllib.urlencode(filter_combination)
+                # query_string = urllib.urlencode(filter_combination)
+                query_string = '&'.join([k+'='+v for k, v in filter_combination])
                 request_url = self.start_urls[0]+'?'+query_string
                 yield scrapy.Request(request_url, callback=self.parse_start_page)
 
