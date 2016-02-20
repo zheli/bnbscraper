@@ -16,3 +16,4 @@ bnbscraper/spiders/airbnbSpider.pyc
 *.json
 *.p
 .ipynb_*
+*.log
