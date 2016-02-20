@@ -33,6 +33,7 @@ class AirbnbSpider(scrapy.Spider):
                 # query_string = urllib.urlencode(filter_combination)
                 query_string = '&'.join([k+'='+v for k, v in filter_combination])
                 request_url = self.start_urls[0]+'?'+query_string
+
                 yield scrapy.Request(request_url, callback=self.parse_start_page)
 
 
@@ -58,6 +59,11 @@ class AirbnbSpider(scrapy.Spider):
                      in range(1, last_page_number+1)
                      ]
         # the function loops over all paginated result pages
+
+        print '|GENERATED Links ----------|'
+        print page_urls
+        print '|--------------------------|'
+
         for page_url in page_urls:
             yield scrapy.Request(page_url, callback=self.parse_listing_results_page)
             # send a request every time and set as callback the parseQueryPage
@@ -75,6 +81,7 @@ class AirbnbSpider(scrapy.Spider):
         :param response: scrapy response object
         :return: item object
         """
+        print "Parsing Listing: " + response.url
         item = BnbItem()
         airbnb_json_all = json.loads(response.xpath('//meta[@id="_bootstrap-room_options"]/@content').extract()[0])
         airbnb_json = airbnb_json_all['airEventData']
@@ -125,7 +132,10 @@ class AirbnbSpider(scrapy.Spider):
 
         bathrooms = response.xpath('//strong[contains(@data-reactid,"Bathrooms")]/text()').extract()
         if len(bathrooms):
-            item['bathrooms'] = float(bathrooms[0])
+            if "+" in bathrooms: # some listings have 8+ rooms as a number
+                item['bathrooms'] = 9
+            else:
+                item['bathrooms'] = float(bathrooms[0])
 
         bedrooms = response.xpath('//strong[contains(@data-reactid,"Bedrooms")]/text()').extract()
         if len(bedrooms):
