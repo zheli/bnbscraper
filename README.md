@@ -26,3 +26,9 @@ Advanced usage:
 >>  scrapy crawl airbnb -a query=Rome--Italy -a filters=neighborhood,property_type_id -o output.json  2>&1 | tee ~/<log>.log
 ```
 
+
+To use the script with some default shell parameters, simply pass as first argument the city as query:
+```bash
+>> ./runSearch.sh Rome--Italy
+``
+
