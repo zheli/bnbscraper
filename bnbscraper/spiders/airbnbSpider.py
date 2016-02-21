@@ -60,10 +60,6 @@ class AirbnbSpider(scrapy.Spider):
                      ]
         # the function loops over all paginated result pages
 
-        print '|GENERATED Links ----------|'
-        print page_urls
-        print '|--------------------------|'
-
         for page_url in page_urls:
             yield scrapy.Request(page_url, callback=self.parse_listing_results_page)
             # send a request every time and set as callback the parseQueryPage

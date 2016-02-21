@@ -1,20 +1,20 @@
 #!/bin/sh
 
-cd /home/ubuntu/AirBnBScrapingProject/bnbscraper
+cd $1
 
-QUERY=$1
-FILTERS="neighborhood,property_type_id"
+QUERY=$2
+FILTERS="neighborhood,property_type_id,cancel_policies"
 DATE="$(date +%F)"
-LOGSEP="_"
-LOGFILE="$QUERY$LOGSEP$DATE$"
+SEP="_"
+LOGFILE="$QUERY$SEP$DATE"
 LOGFILE="$LOGFILE.log"
-LOGFILE="./$LOGFILE"
-OUTFILE="$QUERY$LOGSEP$DATE.json"
-OUTFILE="./$OUTFILE"
-echo $OUTFILE
-echo $LOGFILE
-touch $OUTFILE
-touch $LOGFILE
+LOGFILE="./log/$LOGFILE"
+OUTFILE="$QUERY$SEP$DATE.json"
+OUTFILE="./scrapedQueries/$OUTFILE"
+mkdir ./log/
+mkdir ./scrapedQueries/
+touch ${OUTFILE}
+touch ${LOGFILE}
 ls
-scrapy crawl airbnb -a query=$QUERY -a filters=$FILTERS  -o $OUTFILE --loglevel INFO | tee $LOGFILE
+# scrapy crawl airbnb -a query=${QUERY} -a filters=${FILTERS}  -o ${OUTFILE} | tee ${LOGFILE}
 
