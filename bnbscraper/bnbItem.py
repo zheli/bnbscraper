@@ -34,3 +34,4 @@ class BnbItem(scrapy.Item):
         cleaningFee = scrapy.Field()
         pageNumber = scrapy.Field()
         neighborhood = scrapy.Field()
+        iso_state_json = scrapy.Field()
