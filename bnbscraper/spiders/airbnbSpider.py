@@ -158,7 +158,7 @@ class AirbnbSpider(scrapy.Spider):
 
         item['neighborhood'] = response.request.url
 
-        iso_state_json  = response.xpath('//div[@class="___iso-state___listingbundlejs"]/@data-state').xtract()
+        iso_state_json  = response.xpath('//div[@class="___iso-state___listingbundlejs"]/@data-state').extract()
         if len(iso_state_json):
             item['iso_state_json'] =  iso_state_json
 
