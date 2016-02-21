@@ -178,7 +178,7 @@ class AirbnbSpider(scrapy.Spider):
             for b_filter in self.bnb_filters:
                 xpath_query_string = '//input[@name="%s"]/@value' % b_filter
                 filter_values = response.xpath(xpath_query_string).extract()
-                if filter_values:  # check if the provided filter is even available
+                if not filter_values:  # check if the provided filter is even available
                     continue
                 else:
                     filter_dict[b_filter] = filter_values
