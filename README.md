@@ -29,7 +29,6 @@ Advanced usage:
 
 To use the script with some default shell parameters, simply pass as first argument the city as query:
 ```bash
->> ./runSearch.sh Rome--Italy
-
+>> ./runSearch.sh <workingDir> Rome--Italy
 ```
 
