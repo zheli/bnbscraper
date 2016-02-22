@@ -40,12 +40,15 @@ class AirbnbSpider(scrapy.Spider):
         :param response:
         :return:
         """
+        print 'INFO LV: Reading search page: '+response.url
         try:
             last_page_number = int(response
                                    .xpath('//ul[@class="list-unstyled"]/li[last()-1]/a/@href')
                                    .extract()[0]
                                    .split('page=')[1]
                                    )
+            if last_page_number >= 17:
+                print 'INFO LV:last page in search site: ' + last_page_number
         except:
             last_page_number = 1
 
@@ -127,7 +130,7 @@ class AirbnbSpider(scrapy.Spider):
 
         bathrooms = response.xpath('//strong[contains(@data-reactid,"Bathrooms")]/text()').extract()
         if len(bathrooms):
-            if "+" in bathrooms:  # some listings have 8+ rooms as a number
+            if "+" in bathrooms[0]:  # some listings have 8+ rooms as a number
                 item['bathrooms'] = 9
             else:
                 item['bathrooms'] = float(bathrooms[0])
