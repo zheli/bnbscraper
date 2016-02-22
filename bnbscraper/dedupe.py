@@ -5,8 +5,8 @@ from scrapy.utils.request import request_fingerprint
 
 class CustomFilter(RFPDupeFilter):
     """A dupe filter that considers specific ids in the url"""
-    @classmethod
-    def __getid(url):
+
+    def __getid(self, url):
         if 'room' in url:
             mm = url.split('/rooms/')[1].split('?')[0]
             return mm
