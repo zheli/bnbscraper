@@ -16,5 +16,5 @@ mkdir ./scrapedQueries/
 touch ${OUTFILE}
 touch ${LOGFILE}
 ls
-scrapy crawl airbnb -a query=${QUERY} -a filters=${FILTERS}  -o ${OUTFILE} -L INFO 2>&1 | tee ${LOGFILE}
+scrapy crawl airbnb -a query=${QUERY} -a filters=${FILTERS}  -o ${OUTFILE} -L INFO | tee ${LOGFILE}
 

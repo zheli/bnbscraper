@@ -27,11 +27,22 @@ class AirbnbSpider(scrapy.Spider):
             # if not pass the first page to the parse result page
             yield scrapy.Request(self.start_urls[0], callback=self.parse_start_page)
         else:
-            all_combinations = self.filter_dict_to_tuple(filter_dict)
-            for filter_combination in self.filter_combinations_generator(all_combinations):
-                query_string = '&'.join([k + '=' + v for k, v in filter_combination])
-                request_url = self.start_urls[0] + '?' + query_string
+            request_urls = []
+            filter_tuples = self.filter_dict_to_tuple(filter_dict)
+            for cartesian_combination in self.filter_combinations_generator(filter_tuples):
+                for power_combination in self.power_set(cartesian_combination):
+                    query_string = '&'.join([k + '=' + v for k, v in power_combination])
+                    request_url = self.start_urls[0] + '?' + query_string
+                    request_urls.append(request_url)
+
+            print 'Duplicate Request urls:' + str(len(request_urls))
+            request_urls = set(request_urls)
+            print 'Deduped Request urls:' + str(len(request_urls))
+
+            for request_url in request_urls:
+                print(request_url)
                 yield scrapy.Request(request_url, callback=self.parse_start_page)
+
 
     def parse_start_page(self, response):
         """
@@ -79,7 +90,6 @@ class AirbnbSpider(scrapy.Spider):
         :param response: scrapy response object
         :return: item object
         """
-        print "Parsing Listing: " + response.url
         item = BnbItem()
         airbnb_json_all = json.loads(response.xpath('//meta[@id="_bootstrap-room_options"]/@content').extract()[0])
         airbnb_json = airbnb_json_all['airEventData']
@@ -196,3 +206,10 @@ class AirbnbSpider(scrapy.Spider):
     def filter_combinations_generator(combinations):
         for element in itertools.product(*combinations):
             yield element
+
+
+    @staticmethod
+    def power_set(iterable):
+        "powerset([1,2,3]) --> () (1,) (2,) (3,) (1,2) (1,3) (2,3) (1,2,3)"
+        s = list(iterable)
+        return itertools.chain.from_iterable(itertools.combinations(s, r) for r in range(len(s)+1))

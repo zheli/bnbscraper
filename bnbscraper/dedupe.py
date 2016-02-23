@@ -19,5 +19,6 @@ class CustomFilter(RFPDupeFilter):
             print 'DEDUPE: '+fp
             return True
         self.fingerprints.add(fp)
+
         if self.file:
             self.file.write(fp + os.linesep)
