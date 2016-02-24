@@ -3,7 +3,7 @@
 cd $1
 
 QUERY=$2
-FILTERS="neighborhood,property_type_id,cancel_policies"
+FILTERS="neighborhood,property_type_id,languages"
 DATE="$(date +%F)"
 SEP="_"
 LOGFILE="$QUERY$SEP$DATE"
