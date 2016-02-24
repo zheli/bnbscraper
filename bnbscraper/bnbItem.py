@@ -33,5 +33,10 @@ class BnbItem(scrapy.Item):
         extraPeople = scrapy.Field()
         cleaningFee = scrapy.Field()
         pageNumber = scrapy.Field()
-        neighborhood = scrapy.Field()
-        iso_state_json = scrapy.Field()
+        time_since_last_calendar_update = scrapy.Field()
+        calendarLastUpdated = scrapy.Field()
+        nightly_price = scrapy.Field()
+        host_url = scrapy.Field()
+        scraped_time = scrapy.Field()
+        city = scrapy.Field()
+

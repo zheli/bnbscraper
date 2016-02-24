@@ -2,6 +2,8 @@ import scrapy
 from bnbscraper.bnbItem import BnbItem
 import json
 import itertools
+import time
+import logging
 
 AIRBNB_URL = "https://www.airbnb.com/s/"
 
@@ -35,9 +37,9 @@ class AirbnbSpider(scrapy.Spider):
                     request_url = self.start_urls[0] + '?' + query_string
                     request_urls.append(request_url)
 
-            print 'Duplicate Request urls:' + str(len(request_urls))
+            logging.log(logging.DEBUG ,'Duplicate Request urls:' + str(len(request_urls)))
             request_urls = set(request_urls)
-            print 'Deduped Request urls:' + str(len(request_urls))
+            logging.log(logging.DEBUG ,'DeDuplicated Request urls:' + str(len(request_urls)))
 
             for request_url in request_urls:
                 print(request_url)
@@ -83,33 +85,37 @@ class AirbnbSpider(scrapy.Spider):
             url = response.urljoin(href)
             yield scrapy.Request(url, callback=self.parse_listing_contents)
 
-    @staticmethod
-    def parse_listing_contents(response):
+    def parse_listing_contents(self, response):
         """
         This method extracts the actual data from the airbnb listing
         :param response: scrapy response object
         :return: item object
         """
         item = BnbItem()
-        airbnb_json_all = json.loads(response.xpath('//meta[@id="_bootstrap-room_options"]/@content').extract()[0])
-        airbnb_json = airbnb_json_all['airEventData']
-        item['rev_count'] = airbnb_json['visible_review_count']
-        item['amenities'] = airbnb_json['amenities']
-        item['host_id'] = airbnb_json_all['hostId']
-        item['hosting_id'] = airbnb_json['hosting_id']
-        item['room_type'] = airbnb_json['room_type']
-        item['price'] = airbnb_json['price']
-        item['bed_type'] = airbnb_json['bed_type']
-        item['person_capacity'] = airbnb_json['person_capacity']
-        item['cancel_policy'] = airbnb_json['cancel_policy']
-        item['rating_communication'] = airbnb_json['communication_rating']
-        item['rating_cleanliness'] = airbnb_json['cleanliness_rating']
-        item['rating_checkin'] = airbnb_json['checkin_rating']
-        item['satisfaction_guest'] = airbnb_json['guest_satisfaction_overall']
-        item['instant_book'] = airbnb_json['instant_book_possible']
-        item['accuracy_rating'] = airbnb_json['accuracy_rating']
-        item['response_time'] = airbnb_json['response_time_shown']
-        item['response_rate'] = airbnb_json['reponse_rate_shown']
+
+        json_array = response.xpath('//meta[@id="_bootstrap-room_options"]/@content').extract();
+        if json_array:
+            airbnb_json_all = json.loads(json_array[0])
+            airbnb_json = airbnb_json_all['airEventData']
+            item['rev_count'] = airbnb_json['visible_review_count']
+            item['amenities'] = airbnb_json['amenities']
+            item['host_id'] = airbnb_json_all['hostId']
+            item['hosting_id'] = airbnb_json['hosting_id']
+            item['room_type'] = airbnb_json['room_type']
+            item['price'] = airbnb_json['price']
+            item['bed_type'] = airbnb_json['bed_type']
+            item['person_capacity'] = airbnb_json['person_capacity']
+            item['cancel_policy'] = airbnb_json['cancel_policy']
+            item['rating_communication'] = airbnb_json['communication_rating']
+            item['rating_cleanliness'] = airbnb_json['cleanliness_rating']
+            item['rating_checkin'] = airbnb_json['checkin_rating']
+            item['satisfaction_guest'] = airbnb_json['guest_satisfaction_overall']
+            item['instant_book'] = airbnb_json['instant_book_possible']
+            item['accuracy_rating'] = airbnb_json['accuracy_rating']
+            item['response_time'] = airbnb_json['response_time_shown']
+            item['response_rate'] = airbnb_json['reponse_rate_shown']
+            item['calendarLastUpdated'] = airbnb_json_all['calendarLastUpdated']
+            item['nightly_price'] = airbnb_json_all['nightly_price']
         item['url'] = response.url
 
         title = response.xpath('/html/head/meta[@property="og:title"]/@content').extract()
@@ -127,6 +133,10 @@ class AirbnbSpider(scrapy.Spider):
         country = response.xpath('/html/head/meta[@property="airbedandbreakfast:country"]/@content').extract()
         if len(country):
             item['country'] = country[0]
+
+        city = response.xpath('/html/head/meta[@property="airbedandbreakfast:city"]/@content').extract()
+        if len(country):
+            item['city'] = city[0]
 
         lat = response.xpath(
             '/html/head/meta[@property="airbedandbreakfast:location:latitude"]/@content').extract()
@@ -165,13 +175,19 @@ class AirbnbSpider(scrapy.Spider):
         if len(cleaning_fee):
             item['cleaningFee'] = cleaning_fee[0]
 
-        item['neighborhood'] = response.request.url
 
-        iso_state_json  = response.xpath('//div[@class="___iso-state___listingbundlejs"]/@data-state').extract()
-        if len(iso_state_json):
-            item['iso_state_json'] =  iso_state_json
+        host_link = response.xpath("//a[contains(@href, '/users/show/')]/@href").extract()
+        if host_link:
+            item['host_url'] = response.urljoin(host_link[0])
+
+        item['scraped_time'] = time.time()
 
         yield item
+
+
+
+
+
 
     def extract_filter_property(self, response):
         """
@@ -192,6 +208,7 @@ class AirbnbSpider(scrapy.Spider):
                 else:
                     filter_dict[b_filter] = filter_values
             return filter_dict
+
 
     @staticmethod
     def filter_dict_to_tuple(filter_dict):
