@@ -37,12 +37,11 @@ class AirbnbSpider(scrapy.Spider):
                     request_url = self.start_urls[0] + '?' + query_string
                     request_urls.append(request_url)
 
-            logging.log(logging.DEBUG ,'Duplicate Request urls:' + str(len(request_urls)))
+            logging.log(logging.DEBUG ,'Duplicate Request urls: ' + str(len(request_urls)))
             request_urls = set(request_urls)
-            logging.log(logging.DEBUG ,'DeDuplicated Request urls:' + str(len(request_urls)))
+            logging.log(logging.DEBUG ,'DeDuplicated Request urls: ' + str(len(request_urls)))
 
             for request_url in request_urls:
-                print(request_url)
                 yield scrapy.Request(request_url, callback=self.parse_start_page)
 
 
@@ -53,23 +52,31 @@ class AirbnbSpider(scrapy.Spider):
         :param response:
         :return:
         """
-        print 'INFO LV: Reading search page: '+response.url
+        logging.log(logging.DEBUG, 'Reading search page: '+response.url)
         try:
             last_page_number = int(response
                                    .xpath('//ul[@class="list-unstyled"]/li[last()-1]/a/@href')
                                    .extract()[0]
                                    .split('page=')[1]
                                    )
-            if last_page_number >= 17:
-                print 'INFO LV:last page in search site: ' + last_page_number
-        except:
-            last_page_number = 1
+            if last_page_number > 16:
+                logging.log(logging.DEBUG, "There is a large number of results: pages "+str(last_page_number))
+        except IndexError:
+            reason = response.xpath('//p[@class="text-lead"]/text()').extract()
+            if reason:
+                if 'find any results that matched your criteria' in reason[0]:
+                    logging.log(logging.DEBUG,'No results on page' )
+                    return
+            else:
+                logging.log(logging.DEBUG,'Assuming one page of results' )
+                last_page_number = 1
 
         # use the request.url to add the right page not through simple cat
         if '?' in response.url:
             page_separator = '&'
         else:
             page_separator = '?'
+
         page_urls = [response.url + page_separator + "page=" + str(pageNumber)
                      for pageNumber
                      in range(1, last_page_number + 1)
@@ -82,6 +89,7 @@ class AirbnbSpider(scrapy.Spider):
 
     def parse_listing_results_page(self, response):
         for href in response.xpath('//div[@class="listing"]/@data-url').extract():
+            logging.log(logging.DEBUG, 'Reading results page: ' + response.url)
             url = response.urljoin(href)
             yield scrapy.Request(url, callback=self.parse_listing_contents)
 
