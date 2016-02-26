@@ -32,3 +32,10 @@ To use the script with some default shell parameters, simply pass as first argum
 >> ./runSearch.sh <workingDir> Rome--Italy
 ```
 
+db.listings.aggregate([
+                      {$group: {_id: '$hosting_id',
+                                count: {$sum: 1}
+                               }
+                      },
+                      {$match: {count: {$gt:1} } }
+                     ])

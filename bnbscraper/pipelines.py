@@ -25,5 +25,5 @@ class MongoDBPListingsPipeline(object):
 
     def process_item(self, item, spider):
         self.collection.insert(dict(item))
-        logging.log(logging.DEBUG, "Hosting ID %d added to database"%item['hosting_id'])
+        logging.log(logging.INFO, "Hosting ID %d added to database"%item['hosting_id'])
         return item

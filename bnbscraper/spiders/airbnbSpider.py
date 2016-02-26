@@ -11,13 +11,14 @@ AIRBNB_URL = "https://www.airbnb.com/s/"
 class AirbnbSpider(scrapy.Spider):
     """
     pass command line arguments as follows
-    e.g. scrapy crawl airbnb -a query=Reggio-Emilia--Italy filters=neighborhood,propertytype-o tests.json
+    e.g. scrapy crawl airbnb -a query=Reggio-Emilia--Italy filters=neighborhood,propertytype -o tests.json
     """
 
     def __init__(self, query='', filters='', *args, **kwargs):
         super(AirbnbSpider, self).__init__(*args, **kwargs)
         self.start_urls = [AIRBNB_URL + query]
         self.bnb_filters = [b_filter.strip() for b_filter in list(filters.split(','))]
+        self.filter_urls = []
 
     name = "airbnb"
     allowed_domains = ["airbnb.com"]
@@ -37,43 +38,41 @@ class AirbnbSpider(scrapy.Spider):
                     request_url = self.start_urls[0] + '?' + query_string
                     request_urls.append(request_url)
 
-            logging.log(logging.DEBUG ,'Duplicate Request urls: ' + str(len(request_urls)))
+            logging.log(logging.DEBUG, 'Duplicate Request urls: ' + str(len(request_urls)))
             request_urls = set(request_urls)
-            logging.log(logging.DEBUG ,'DeDuplicated Request urls: ' + str(len(request_urls)))
+            logging.log(logging.DEBUG, 'DeDuplicated Request urls: ' + str(len(request_urls)))
             request_urls = list(request_urls)
-            request_urls.sort(key = len)
+            request_urls.sort(key=len)
             self.filter_urls = request_urls
 
             while self.filter_urls:
                 filter_request_url = self.filter_urls.pop(0)
                 max_page_number = scrapy.Request(filter_request_url, callback=self.last_pagenumer_in_search)
                 if max_page_number == 0:
-                   len_before = len(self.filter_urls)
-                   self.filter_urls = filter(lambda url: not filter_request_url in url, self.filter_urls)
-                   len_after= len(self.filter_urls)
-                   logging.log(logging.DEBUG, "Page: {0} has 0 results reduce urls from {1} to {2}".format(
-                                                        filter_request_url,
-                                                        str(len_before),
-                                                        str(len_after)
-                                                        )
+                    len_before = len(self.filter_urls)
+                    self.filter_urls = filter(lambda url: filter_request_url not in url, self.filter_urls)
+                    len_after = len(self.filter_urls)
+                    logging.log(logging.DEBUG, "Page: {0} has 0 results reduce urls from {1} to {2}".format(
+                        filter_request_url,
+                        str(len_before),
+                        str(len_after)
+                    )
                                 )
                 elif max_page_number < 17:
-                   len_before = len(self.filter_urls)
-                   self.filter_urls = filter(lambda url: not filter_request_url in url, self.filter_urls)
-                   len_after = len(self.filter_urls)
-                   logging.log(logging.DEBUG, "Page: {0} has {3} results reduce urls from {1} to {2}".format(
-                                                        filter_request_url,
-                                                        str(len_before),
-                                                        str(len_after),
-                                                        str(max_page_number)
-                                                        )
+                    len_before = len(self.filter_urls)
+                    self.filter_urls = filter(lambda url: filter_request_url not in url, self.filter_urls)
+                    len_after = len(self.filter_urls)
+                    logging.log(logging.DEBUG, "Page: {0} has {3} results reduce urls from {1} to {2}".format(
+                        filter_request_url,
+                        str(len_before),
+                        str(len_after),
+                        str(max_page_number)
+                    )
                                 )
-                   yield scrapy.Request(filter_request_url, callback=self.parse_start_page)
+                    yield scrapy.Request(filter_request_url, callback=self.parse_start_page)
                 else:
                     logging.log(logging.DEBUG, "Page: {0} has 17+ results.".format(filter_request_url))
                     yield scrapy.Request(filter_request_url, callback=self.parse_start_page)
-
-
 
     def parse_start_page(self, response):
         """
@@ -83,7 +82,8 @@ class AirbnbSpider(scrapy.Spider):
         :return:
         """
         last_page_number = self.last_pagenumer_in_search(response)
-        if last_page_number > 16: logging.log(logging.INFO, "There are {0} pages on: {1}".format(str(last_page_number), response.url))
+        if last_page_number > 16:
+            logging.log(logging.INFO, "There are {0} pages on: {1}".format(str(last_page_number), response.url))
 
         if '?' in response.url:
             page_separator = '&'
@@ -91,15 +91,10 @@ class AirbnbSpider(scrapy.Spider):
             page_separator = '?'
 
         page_urls = [response.url + page_separator + "page=" + str(pageNumber)
-                                for pageNumber in range(1, last_page_number + 1)]
-
+                     for pageNumber in range(1, last_page_number + 1)]
 
         for page_url in page_urls:
             yield scrapy.Request(page_url, callback=self.parse_listing_results_page)
-
-
-
-
 
     def parse_listing_results_page(self, response):
         for href in response.xpath('//div[@class="listing"]/@data-url').extract():
@@ -114,7 +109,7 @@ class AirbnbSpider(scrapy.Spider):
         """
         item = BnbItem()
 
-        json_array = response.xpath('//meta[@id="_bootstrap-room_options"]/@content').extract();
+        json_array = response.xpath('//meta[@id="_bootstrap-room_options"]/@content').extract()
         if json_array:
             airbnb_json_all = json.loads(json_array[0])
             airbnb_json = airbnb_json_all['airEventData']
@@ -156,7 +151,7 @@ class AirbnbSpider(scrapy.Spider):
             item['country'] = country[0]
 
         city = response.xpath('/html/head/meta[@property="airbedandbreakfast:city"]/@content').extract()
-        if len(country):
+        if len(city):
             item['city'] = city[0]
 
         lat = response.xpath(
@@ -196,7 +191,6 @@ class AirbnbSpider(scrapy.Spider):
         if len(cleaning_fee):
             item['cleaningFee'] = cleaning_fee[0]
 
-
         host_link = response.xpath("//a[contains(@href, '/users/show/')]/@href").extract()
         if host_link:
             item['host_url'] = response.urljoin(host_link[0])
@@ -204,11 +198,6 @@ class AirbnbSpider(scrapy.Spider):
         item['scraped_time'] = time.time()
 
         yield item
-
-
-
-
-
 
     def extract_filter_property(self, response):
         """
@@ -230,8 +219,8 @@ class AirbnbSpider(scrapy.Spider):
                     filter_dict[b_filter] = filter_values
             return filter_dict
 
-
-    def last_pagenumer_in_search(self, response):
+    @staticmethod
+    def last_pagenumer_in_search(response):
         """
         the function takes a response from a search result page and returns the last page number:
         if the page does not contain any results it returns 0
@@ -250,11 +239,10 @@ class AirbnbSpider(scrapy.Spider):
         except IndexError:
             reason = response.xpath('//p[@class="text-lead"]/text()').extract()
             if reason and ('find any results that matched your criteria' in reason[0]):
-                logging.log(logging.DEBUG,'No results on page'+response.url )
+                logging.log(logging.DEBUG, 'No results on page' + response.url)
                 return 0
             else:
                 return 1
-
 
     @staticmethod
     def filter_dict_to_tuple(filter_dict):
@@ -270,9 +258,12 @@ class AirbnbSpider(scrapy.Spider):
         for element in itertools.product(*combinations):
             yield element
 
-
     @staticmethod
     def power_set(iterable):
-        "powerset([1,2,3]) --> () (1,) (2,) (3,) (1,2) (1,3) (2,3) (1,2,3)"
+        """
+        powerset([1,2,3]) --> () (1,) (2,) (3,) (1,2) (1,3) (2,3) (1,2,3)
+        :param iterable:
+        :return:
+        """
         s = list(iterable)
-        return itertools.chain.from_iterable(itertools.combinations(s, r) for r in range(len(s)+1))
+        return itertools.chain.from_iterable(itertools.combinations(s, r) for r in range(len(s) + 1))
